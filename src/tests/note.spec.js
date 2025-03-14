@@ -11,7 +11,6 @@ chai.use(chaiHttp);
 describe('Notes API', () => {
     let testNoteId;
 
-    // use it to run before all the tests hmm
     before(async () => {
         await mongoose.connect(process.env.MONGO_URI, {
             useNewUrlParser: true,
@@ -20,15 +19,18 @@ describe('Notes API', () => {
         await Note.deleteMany({});
     });
 
-    // run after
     after(async () => {
         await Note.deleteMany({});
         await mongoose.connection.close();
     });
 
-    // test note
+    beforeEach(async () => {
+        const note = await Note.create({ title: 'Temporary Note', content: 'Temporary Content' });
+        testNoteId = note._id;
+    });
+
     describe('POST /notes', () => {
-        it('it should create a new note', (done) => {
+        it('should create a new note', (done) => {
             const newNote = { title: 'Test Note', content: 'This is just a test content hehe.' };
             chai.request(server)
             .post('/notes')
@@ -39,28 +41,26 @@ describe('Notes API', () => {
                 expect(res.body.note).to.have.property('_id');
                 expect(res.body.note.title).to.equal(newNote.title);
                 expect(res.body.note.content).to.equal(newNote.content);
-                testNoteId = res.body.note._id;
                 done();
             });
         });
 
         it('should return error for missing title or content', (done) => {
             const incompleteNote = { title: '' };
-        
+
             chai.request(server)
             .post('/notes')
             .send(incompleteNote)
             .end((err, res) => {
-                console.log("🚨 Debugging Response (POST /notes):", res.body); // Debugging
-                expect(res).to.have.status(400);  
+                console.log("Debugging Response (POST /notes):", res.body);
+                expect(res).to.have.status(400);
                 expect(res.body).to.have.property('message');
-                expect(res.body.message).to.include('Title and content');
+                expect(res.body.message).to.include('Title and content are required');
                 done();
             });
         });
     });
 
-    // test fetching all the notes
     describe('GET /notes', () => {
         it('should retrieve all notes', (done) => {
             chai.request(server)
@@ -73,7 +73,6 @@ describe('Notes API', () => {
         });
     });
 
-    // test to fetching a single note
     describe('GET /notes/:id', () => {
         it('should retrieve a specific note by ID', (done) => {
             chai.request(server)
@@ -81,14 +80,14 @@ describe('Notes API', () => {
             .end((err, res) => {
                 expect(res).to.have.status(200);
                 expect(res.body).to.have.property('note');
-                expect(res.body.note._id).to.equal(testNoteId);
+                expect(res.body.note._id).to.equal(testNoteId.toString());
                 done();
             });
         });
 
         it('should return 404 for an invalid note ID', (done) => {
             chai.request(server)
-            .get('/notes/605c72d295d28c4c2e4a1c2f') // Non-existent ID
+            .get('/notes/605c72d295d28c4c2e4a1c2f') 
             .end((err, res) => {
                 expect(res).to.have.status(404);
                 expect(res.body.message).to.equal('Note not found');
@@ -97,8 +96,6 @@ describe('Notes API', () => {
         });
     });
 
-    // test updating a note
-    
     describe('PUT /notes/:id', () => {
         it('should update an existing note', (done) => {
             const updatedNote = { title: 'Updated Title', content: 'Updated Content' };
@@ -115,21 +112,20 @@ describe('Notes API', () => {
         });
 
         it('should return error for missing title or content', (done) => {
-            const incompleteNote = { title: '' };  // Missing content
+            const incompleteNote = { title: '' };  
             chai.request(server)
-            .post('/notes')
+            .put(`/notes/${testNoteId}`)
             .send(incompleteNote)
             .end((err, res) => {
-                console.log(res.body); 
+                console.log("Debugging Response (PUT /notes/:id):", res.body);
                 expect(res).to.have.status(400);
                 expect(res.body).to.have.property('message'); 
-                expect(res.body.message).to.include('Title and content');
+                expect(res.body.message).to.include('Title and content are required');
                 done();
             });
         });
     });
 
-    // test deleting a note
     describe('DELETE /notes/:id', () => {
         it('should delete a note', (done) => {
             chai.request(server)
@@ -153,5 +149,3 @@ describe('Notes API', () => {
         });
     });
 });
-    
-
