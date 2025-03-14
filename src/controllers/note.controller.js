@@ -1,63 +1,55 @@
 const Note = require('../models/note.model');
 
+const noteController = {
+    create: async (noteObj) => {
+        if (!noteObj || !noteObj.title || !noteObj.content) {
+            return Promise.reject({ status: 400, message: 'Title and content are required' });
+        }
+        try {
+            const note = new Note({ title: noteObj.title, content: noteObj.content });
+            return await note.save();
+        } catch (error) {
+            return Promise.reject({ status: 500, message: 'Database error', error });
+        }
+    },
 
-exports.create = async (noteObj) => {
-    if (!noteObj || !noteObj.title || !noteObj.content) {
-        throw new Error('Title and content are required');
-    }
-    try {
-        const { title, content } = noteObj;
-        let note = new Note({
-            title,
-            content
-        });
-        return await note.save();
+    findAll: async () => {
+        try {
+            return await Note.find();
+        } catch (error) {
+            return Promise.reject({ status: 500, message: 'Database error', error });
+        }
+    },
 
-    } catch (error) {
-        throw Promise.reject(error);
-    }
-    };
-// get all notes
+    findOne: async (id) => {
+        if (!id) return Promise.reject({ status: 400, message: 'Note ID is required' });
+        try {
+            return await Note.findById(id);
+        } catch (error) {
+            return Promise.reject({ status: 500, message: 'Database error', error });
+        }
+    },
 
-exports.findAll = async () => {
-    try {
-        return await Note.find();
-    } catch (error) {
-        throw Promise.reject(error);
+    update: async (id, noteObj) => {
+        if (!id) return Promise.reject({ status: 400, message: 'Note ID is required' });
+        if (!noteObj || !noteObj.title || !noteObj.content) {
+            return Promise.reject({ status: 400, message: 'Title and content are required' });
+        }
+        try {
+            return await Note.findByIdAndUpdate(id, noteObj, { new: true });
+        } catch (error) {
+            return Promise.reject({ status: 500, message: 'Database error', error });
+        }
+    },
+
+    delete: async (id) => {
+        if (!id) return Promise.reject({ status: 400, message: 'Note ID is required' });
+        try {
+            return await Note.findByIdAndDelete(id);
+        } catch (error) {
+            return Promise.reject({ status: 500, message: 'Database error', error });
+        }
     }
 };
 
-// get a single note
-exports.findOne = async (id) => {
-    if (!id) throw new Error('Note id is required');
-    try {
-        return await Note.findById(id);
-    } catch (error) {
-        throw Promise.reject(error);
-    }
-};
-
-// update a note
-exports.update = async (id, noteObj) => {
-    if (!id) throw new Error('Note id is required');
-    if (!noteObj || !noteObj.title || !noteObj.content) {
-        throw new Error('Title and content are required');
-    }
-    try {
-        return await Note.findByIdAndUpdate
-        (id, noteObj, { new: true });
-    }
-    catch (error) {
-        throw Promise.reject(error);
-    }
-}
-
-// delete a note
-exports.delete = async (id) => {
-    if (!id) throw new Error('Note id is required');
-    try {
-        return await Note.findByIdAndDelete(id);
-    } catch (error) {
-        throw Promise.reject(error);
-    }
-}
+module.exports = noteController;

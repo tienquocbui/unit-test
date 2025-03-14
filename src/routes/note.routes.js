@@ -1,26 +1,24 @@
 const express = require('express');
 const router = express.Router();
-// controller
-const noteController = require('../controllers/note.controller');
+const noteController = require('../controllers/note.controller'); // Ensure the correct import
 
 // Create a new note
 router.post('/notes', async (req, res) => {
     const { title, content } = req.body;
     try {
-       const note = await noteController.create({ title, content });
-       res.json({
-              message: 'Note created successfully',
-              note,
-              status: 'success'
-         
-       });
-    } catch (error) {
+        const note = await noteController.create({ title, content });
         res.json({
+            message: 'Note created successfully',
+            note,
+            status: 'success'
+        });
+    } catch (error) {
+        console.error("🚨 Error in POST /notes:", error);
+        res.status(error.status || 500).json({
             item: null,
-            status: err.code || err.statusCode || 500,
-            message:
-              err.message || "Something went wrong while reading item from DB!",
-          });
+            status: error.status || 500,
+            message: error.message || "Something went wrong while creating the note!"
+        });
     }
 });
 
@@ -32,15 +30,14 @@ router.get('/notes', async (req, res) => {
             message: 'Notes fetched successfully',
             notes,
             status: 'success'
-        
         });
     } catch (error) {
-        res.json({
+        console.error("🚨 Error in GET /notes:", error);
+        res.status(error.status || 500).json({
             item: null,
-            status: err.code || err.statusCode || 500,
-            message:
-              err.message || "Something went wrong while reading item from DB!",
-          });
+            status: error.status || 500,
+            message: error.message || "Something went wrong while fetching notes!"
+        });
     }
 });
 
@@ -56,15 +53,14 @@ router.get('/notes/:id', async (req, res) => {
             message: 'Note fetched successfully',
             note,
             status: 'success'
-        
         });
     } catch (error) {
-        res.json({
+        console.error("🚨 Error in GET /notes/:id:", error);
+        res.status(error.status || 500).json({
             item: null,
-            status: err.code || err.statusCode || 500,
-            message:
-              err.message || "Something went wrong while reading item from DB!",
-          });
+            status: error.status || 500,
+            message: error.message || "Something went wrong while fetching the note!"
+        });
     }
 });
 
@@ -80,14 +76,15 @@ router.put('/notes/:id', async (req, res) => {
         res.json({ 
             message: 'Note updated successfully', 
             note,
-            status: 'success'});
+            status: 'success'
+        });
     } catch (error) {
-        res.json({
+        console.error("🚨 Error in PUT /notes/:id:", error);
+        res.status(error.status || 500).json({
             item: null,
-            status: err.code || err.statusCode || 500,
-            message:
-              err.message || "Something went wrong while reading item from DB!",
-          });
+            status: error.status || 500,
+            message: error.message || "Something went wrong while updating the note!"
+        });
     }
 });
 
@@ -101,12 +98,12 @@ router.delete('/notes/:id', async (req, res) => {
         }
         res.json({ message: 'Note deleted successfully', status: 'success' });
     } catch (error) {
-        res.json({
+        console.error("🚨 Error in DELETE /notes/:id:", error);
+        res.status(error.status || 500).json({
             item: null,
-            status: err.code || err.statusCode || 500,
-            message:
-              err.message || "Something went wrong while reading item from DB!",
-          });
+            status: error.status || 500,
+            message: error.message || "Something went wrong while deleting the note!"
+        });
     }
 });
 
